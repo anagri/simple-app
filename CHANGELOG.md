@@ -127,3 +127,24 @@ npm run lint:fix    # Format with Prettier and auto-fix linting issues
 - Prettier 3.7.4
 - eslint-config-prettier 10.1.8
 - eslint-plugin-prettier 5.5.4
+
+## CI/CD Build Workflow - 2025-12-30
+
+### Added GitHub Actions Build and Lint Workflow
+
+**Files created:**
+
+1. `.github/workflows/build.yml` - CI workflow for code quality checks
+   - Runs on push to main and pull requests
+   - Checks code formatting with Prettier
+   - Runs ESLint for code quality
+   - Builds the project to ensure no build errors
+
+**Workflow steps:**
+
+1. Checkout code
+2. Setup Node.js 20
+3. Install dependencies with `npm ci`
+4. Check formatting: `npx prettier --check .`
+5. Lint code: `npm run lint`
+6. Build project: `npm run build`
