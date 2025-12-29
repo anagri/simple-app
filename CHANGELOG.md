@@ -45,3 +45,33 @@ export default defineConfig({
 ```bash
 npm run dev
 ```
+
+## GitHub Pages Deployment - 2025-12-30
+
+### Added GitHub Actions Workflow for Automated Deployment
+
+**Files created:**
+
+1. `.github/workflows/deploy.yml` - GitHub Actions workflow for deploying to GitHub Pages
+   - Triggers on push to main branch
+   - Builds the app using `npm ci` and `npm run build`
+   - Deploys to GitHub Pages using official actions
+
+**Configuration changes:**
+
+1. Updated `vite.config.ts` - added base path for GitHub Pages:
+```typescript
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  base: '/simple-app/',
+})
+```
+
+**Setup required in GitHub repo:**
+- Go to Settings → Pages
+- Under "Build and deployment", select "GitHub Actions" as the source
+- Ensure "Read and write permissions" are enabled in Settings → Actions → General
+
+**Deployment:**
+- Automatic on every push to main branch
+- App will be available at: https://bodhisearch.github.io/simple-app/
