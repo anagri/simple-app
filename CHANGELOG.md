@@ -148,3 +148,48 @@ npm run lint:fix    # Format with Prettier and auto-fix linting issues
 4. Check formatting: `npx prettier --check .`
 5. Lint code: `npm run lint`
 6. Build project: `npm run build`
+
+## Playwright E2E Testing - 2025-12-30
+
+### Added Playwright for End-to-End Testing
+
+**Commands executed:**
+
+```bash
+# Install Playwright
+npm install -D @playwright/test
+
+# Install Chromium browser
+npx playwright install chromium
+```
+
+**Files created:**
+
+1. `playwright.config.ts` - Playwright configuration:
+   - Test directory: `./e2e`
+   - Base URL: `http://localhost:5173/simple-app/`
+   - Web server configured to run dev server
+   - Chromium browser only
+
+2. `e2e/counter.spec.ts` - Counter test:
+   - Navigates to app
+   - Asserts counter button shows "count is 0"
+
+**Configuration changes:**
+
+1. Updated `src/App.tsx` - added `data-testid="counter-button"` to counter button
+2. Updated `package.json` - added test scripts:
+   - `test:e2e` - Run tests in headed mode (browser visible)
+   - `ci:test:e2e` - Run tests in headless mode for CI
+3. Updated `.github/workflows/build.yml` - added Playwright browser install and e2e test steps
+
+**Usage:**
+
+```bash
+npm run test:e2e       # Run e2e tests in headed mode (browser visible)
+npm run ci:test:e2e    # Run e2e tests in headless mode (for CI)
+```
+
+**Stack additions:**
+
+- @playwright/test 1.57.0
