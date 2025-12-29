@@ -15,6 +15,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Development
 npm run dev              # Start dev server at http://localhost:5173
 
+# Testing
+npm test                 # Run unit tests in watch mode
+npm run test:run         # Run unit tests once
+npm run test:coverage    # Run unit tests with coverage report
+npm run test:e2e         # Run e2e tests (headed mode, browser visible)
+npm run ci:test:e2e      # Run e2e tests (headless, for CI)
+
 # Code Quality
 npm run lint             # Check for linting issues
 npm run lint:fix         # Format with Prettier and auto-fix ESLint issues
@@ -42,12 +49,45 @@ This project uses TailwindCSS v4 (not v3). Key differences:
 
 Uses ESLint flat config format (`eslint.config.js`). Prettier is integrated as an ESLint rule, so `npm run lint:fix` handles both formatting and linting.
 
+## Testing
+
+### Unit Tests (Vitest)
+
+- Tests located in `src/**/*.test.tsx`
+- Uses @testing-library/react for component testing
+- Coverage reports generated in `coverage/` directory
+- Configured in `vite.config.ts` with jsdom environment
+
+### E2E Tests (Playwright)
+
+- Tests located in `e2e/**/*.spec.ts`
+- Configured in `playwright.config.ts`
+- Run in headed mode locally, headless in CI
+
+### Pre-commit Hooks
+
+Pre-commit hooks automatically run on `git commit`:
+
+- Format all files with Prettier
+- Lint and fix TypeScript files with ESLint
+- Type-check with TypeScript compiler
+
+Configured via Husky + lint-staged (`.husky/pre-commit` and `.lintstagedrc.json`)
+
 ## CI/CD
 
 Two GitHub Actions workflows:
 
-- **build.yml** - Runs on push/PR: format check, lint, build
+- **build.yml** - Runs on push/PR: security audit, format check, lint, unit tests, build, e2e tests
 - **deploy.yml** - Deploys to GitHub Pages on push to main
+
+### Dependabot
+
+Automated dependency updates configured (`.github/dependabot.yml`):
+
+- Weekly npm dependency PRs (Mondays)
+- Weekly GitHub Actions updates
+- Commit messages prefixed with `chore(deps):` or `chore(ci):`
 
 ## GitHub Pages Setup
 

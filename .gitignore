@@ -23,7 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
-# Playwright
+# Testing
 test-results/
 playwright-report/
 playwright/.cache/
+coverage/
