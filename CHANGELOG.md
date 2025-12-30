@@ -18,25 +18,26 @@ All notable changes to this project will be documented in this file.
 
 **Commit:** Add OAuth 2.1 authentication with Keycloak (27d9952)
 
-Implemented custom OAuth 2.1 authentication library with PKCE flow for Keycloak public client:
+Implemented custom OAuth 2.1 authentication library with PKCE flow for Keycloak public client as **non-UI SDK**:
 
-- Custom auth library in `src/auth/` (7 files)
-  - **Provider module**: `AuthProvider.tsx` (context, hook, provider component)
-  - **Callback module**: `AuthCallback.tsx` (OAuth callback handler)
+- Custom auth library in `src/auth/` (6 files) - non-UI focused with **single hook**
+  - **Provider module**: `AuthProvider.tsx` (context, useAuth hook, integrated callback processing)
   - **Core modules**: `oauth.ts` (PKCE flow, token exchange, revocation), `storage.ts` (localStorage), `types.ts`, `constants.ts`, `index.ts`
-  - Context provider pattern with `useAuth` hook
-  - OAuth callback handler with React StrictMode safety (prevents duplicate token exchanges)
+  - Single `useAuth()` hook returns auth state, actions, and callback state
+  - AuthProvider auto-detects callback route (URL `code` param) and processes internally
+  - OAuth callback with React StrictMode safety (prevents duplicate token exchanges)
   - Namespaced localStorage for token management
   - Token auto-refresh with 60s buffer before expiry
   - Token revocation via API (no Keycloak logout redirect)
 - Configuration via environment variables (`.env.example`, `src/config.ts`)
-- Integration with React app (`src/App.tsx`, `src/main.tsx`)
+- Host app integration in `src/App.tsx` using single hook with custom UI (`CallbackPage` component)
+- Integration with React app (`src/main.tsx`)
 - TypeScript environment definitions (`src/vite-env.d.ts`)
 
 **Exported API:**
 
-- Components: `AuthProvider`, `AuthCallback`
-- Hook: `useAuth()` → `{ isAuthenticated, isLoading, user, error, signIn, signOut, getAccessToken, refreshAccessToken }`
+- Component: `AuthProvider` (context provider wrapper)
+- Hook: `useAuth()` → `{ isAuthenticated, isLoading, user, error, signIn, signOut, getAccessToken, refreshAccessToken, isProcessingCallback, callbackError, callbackReturnUrl }`
 - Types: `AuthConfig`, `AuthUser`, `AuthState`, `AuthError`, `AuthErrorCode`, `AuthContextValue`, `SignInOptions`
 
 **Stack additions:**

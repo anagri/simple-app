@@ -55,6 +55,10 @@ export interface AuthState {
   isLoading: boolean;
   user: AuthUser | null;
   error: AuthError | null;
+  // Callback processing state
+  isProcessingCallback: boolean;
+  callbackError: AuthError | null;
+  callbackReturnUrl: string | null;
 }
 
 // Error types

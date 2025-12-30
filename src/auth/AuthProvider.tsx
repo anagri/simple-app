@@ -6,6 +6,7 @@ import {
   useMemo,
   useContext,
   createContext,
+  useRef,
   type ReactNode,
 } from 'react';
 import { AuthStorage } from './storage';
@@ -17,8 +18,14 @@ import {
   tokenResponseToStored,
   parseIdToken,
   revokeToken,
+  exchangeCodeForTokens,
+  createAuthError,
 } from './oauth';
-import { DEFAULT_CALLBACK_PATH, TOKEN_REFRESH_BUFFER_MS } from './constants';
+import {
+  DEFAULT_CALLBACK_PATH,
+  DEFAULT_POST_LOGIN_REDIRECT,
+  TOKEN_REFRESH_BUFFER_MS,
+} from './constants';
 import type {
   AuthConfig,
   AuthState,
@@ -26,6 +33,7 @@ import type {
   SignInOptions,
   OAuthEndpoints,
   TokenResponse,
+  AuthError,
 } from './types';
 
 // Create context
@@ -51,7 +59,13 @@ export function AuthProvider({ config, children }: AuthProviderProps) {
     isLoading: true,
     user: null,
     error: null,
+    isProcessingCallback: false,
+    callbackError: null,
+    callbackReturnUrl: null,
   });
+
+  // StrictMode protection for callback processing
+  const callbackProcessedRef = useRef(false);
 
   // Memoize derived values
   const storage = useMemo(() => new AuthStorage(config.basePath), [config.basePath]);
@@ -95,9 +109,138 @@ export function AuthProvider({ config, children }: AuthProviderProps) {
     [storage, updateState]
   );
 
+  // Process OAuth callback
+  const processCallback = useCallback(async () => {
+    // StrictMode protection
+    if (callbackProcessedRef.current) return;
+    callbackProcessedRef.current = true;
+
+    updateState({ isProcessingCallback: true, isLoading: false });
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    const errorParam = params.get('error');
+    const errorDescription = params.get('error_description');
+
+    // Handle OAuth error response
+    if (errorParam) {
+      const authError = createAuthError('callback_error', errorDescription ?? errorParam, {
+        error: errorParam,
+        error_description: errorDescription,
+      });
+      updateState({
+        isProcessingCallback: false,
+        callbackError: authError,
+      });
+      return;
+    }
+
+    // Validate code and state
+    if (!code || !state) {
+      const authError = createAuthError('callback_error', 'Missing code or state parameter');
+      updateState({
+        isProcessingCallback: false,
+        callbackError: authError,
+      });
+      return;
+    }
+
+    // Get PKCE data
+    const pkce = storage.getPKCE();
+    if (!pkce) {
+      const authError = createAuthError('pkce_error', 'PKCE data not found or expired');
+      updateState({
+        isProcessingCallback: false,
+        callbackError: authError,
+      });
+      return;
+    }
+
+    // Validate state
+    if (state !== pkce.state) {
+      storage.clearPKCE();
+      const authError = createAuthError(
+        'state_mismatch',
+        'State parameter mismatch (CSRF protection)'
+      );
+      updateState({
+        isProcessingCallback: false,
+        callbackError: authError,
+      });
+      return;
+    }
+
+    try {
+      // Exchange code for tokens
+      const tokenResponse = await exchangeCodeForTokens(
+        endpoints,
+        config.clientId,
+        code,
+        pkce.codeVerifier,
+        pkce.redirectUri
+      );
+
+      // Store tokens
+      const storedTokens = tokenResponseToStored(tokenResponse);
+      storage.setTokens(storedTokens);
+
+      // Parse and store user
+      let user = null;
+      if (tokenResponse.id_token) {
+        user = parseIdToken(tokenResponse.id_token);
+        storage.setUser(user);
+      }
+
+      // Clear PKCE data
+      storage.clearPKCE();
+
+      // Get return URL and clear it
+      const storedReturnUrl = storage.getReturnUrl();
+      storage.clearReturnUrl();
+
+      // Clean URL (remove code and state)
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+
+      // Compute redirect URL
+      const defaultRedirect = config.postLoginRedirect ?? DEFAULT_POST_LOGIN_REDIRECT;
+      const computedReturnUrl =
+        storedReturnUrl ?? `${basePath}${defaultRedirect}`.replace(/\/+/g, '/');
+
+      updateState({
+        isProcessingCallback: false,
+        callbackReturnUrl: `${appUrl}${computedReturnUrl}`,
+        isAuthenticated: true,
+        user,
+      });
+    } catch (err) {
+      const authError =
+        err instanceof Error && 'code' in err
+          ? (err as AuthError)
+          : createAuthError('token_error', 'Token exchange failed', err);
+      storage.clearPKCE();
+      updateState({
+        isProcessingCallback: false,
+        callbackError: authError,
+      });
+    }
+  }, [config, storage, endpoints, appUrl, basePath, updateState]);
+
   // Initialize auth state from storage
   useEffect(() => {
     const initAuth = async () => {
+      // Check if this is OAuth callback (URL has 'code' param)
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+
+      if (code) {
+        // Process OAuth callback
+        await processCallback();
+        return;
+      }
+
+      // Normal initialization from storage
       const tokens = storage.getTokens();
       const user = storage.getUser();
 
@@ -123,7 +266,7 @@ export function AuthProvider({ config, children }: AuthProviderProps) {
     };
 
     initAuth();
-  }, [storage, endpoints, config.clientId, updateState, attemptTokenRefresh]);
+  }, [storage, endpoints, config.clientId, updateState, attemptTokenRefresh, processCallback]);
 
   // Sign in - redirect to authorization server
   const signIn = useCallback(

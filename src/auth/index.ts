@@ -1,6 +1,5 @@
-// Components
+// Components & Hooks
 export { AuthProvider, useAuth } from './AuthProvider';
-export { AuthCallback } from './AuthCallback';
 
 // Types
 export type {

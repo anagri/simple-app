@@ -1,5 +1,6 @@
 import './App.css';
-import { useAuth, AuthCallback } from './auth';
+import { useEffect } from 'react';
+import { useAuth } from './auth';
 import { authConfig } from './config';
 
 function App() {
@@ -10,10 +11,59 @@ function App() {
 
   // Handle callback route
   if (relativePath === '/callback') {
-    return <AuthCallback config={authConfig} />;
+    return <CallbackPage />;
   }
 
   return <MainContent />;
+}
+
+function CallbackPage() {
+  const { isProcessingCallback, callbackError, callbackReturnUrl } = useAuth();
+
+  // Handle redirect on success
+  useEffect(() => {
+    if (callbackReturnUrl) {
+      window.location.href = callbackReturnUrl;
+    }
+  }, [callbackReturnUrl]);
+
+  if (isProcessingCallback) {
+    return (
+      <div
+        data-testid="auth-callback-loading"
+        className="flex min-h-screen items-center justify-center"
+      >
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+          <p className="mt-4 text-gray-600">Completing sign in...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (callbackError) {
+    return (
+      <div
+        data-testid="auth-callback-error"
+        className="flex min-h-screen items-center justify-center"
+      >
+        <div className="max-w-md p-6 text-center">
+          <div className="mb-4 text-5xl text-red-600">!</div>
+          <h2 className="mb-2 text-xl font-semibold text-gray-900">Authentication Failed</h2>
+          <p className="mb-4 text-gray-600">{callbackError.message}</p>
+          <button
+            data-testid="auth-callback-retry"
+            onClick={() => (window.location.href = authConfig.appUrl ?? window.location.origin)}
+            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 function MainContent() {
