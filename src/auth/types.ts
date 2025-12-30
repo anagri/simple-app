@@ -7,7 +7,6 @@ export interface AuthConfig {
   callbackPath?: string; // OAuth callback path (default: '/callback')
   scopes?: string[]; // OAuth scopes (default: ['openid', 'profile', 'email'])
   postLoginRedirect?: string; // Redirect after login (default: '/')
-  postLogoutRedirect?: string; // Redirect after logout (default: '/')
 }
 
 // User information from ID token
@@ -80,7 +79,7 @@ export interface AuthError {
 // Context value exposed by useAuth()
 export interface AuthContextValue extends AuthState {
   signIn: (options?: SignInOptions) => Promise<void>;
-  signOut: (options?: SignOutOptions) => Promise<void>;
+  signOut: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
   refreshAccessToken: () => Promise<boolean>;
 }
@@ -89,10 +88,6 @@ export interface SignInOptions {
   redirectUri?: string; // Override default callback
   prompt?: 'none' | 'login' | 'consent';
   loginHint?: string; // Pre-fill username
-}
-
-export interface SignOutOptions {
-  redirectUri?: string; // Override post-logout redirect
 }
 
 // OAuth endpoints discovered or constructed

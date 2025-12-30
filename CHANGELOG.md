@@ -20,14 +20,24 @@ All notable changes to this project will be documented in this file.
 
 Implemented custom OAuth 2.1 authentication library with PKCE flow for Keycloak public client:
 
-- Custom auth library in `src/auth/` (10 files)
-  - Context provider pattern (`AuthProvider`, `useAuth` hook)
-  - OAuth callback handler with React StrictMode safety
+- Custom auth library in `src/auth/` (7 files)
+  - **Provider module**: `AuthProvider.tsx` (context, hook, provider component)
+  - **Callback module**: `AuthCallback.tsx` (OAuth callback handler)
+  - **Core modules**: `oauth.ts` (PKCE flow, token exchange, revocation), `storage.ts` (localStorage), `types.ts`, `constants.ts`, `index.ts`
+  - Context provider pattern with `useAuth` hook
+  - OAuth callback handler with React StrictMode safety (prevents duplicate token exchanges)
   - Namespaced localStorage for token management
-  - Token auto-refresh with configurable buffer
+  - Token auto-refresh with 60s buffer before expiry
+  - Token revocation via API (no Keycloak logout redirect)
 - Configuration via environment variables (`.env.example`, `src/config.ts`)
 - Integration with React app (`src/App.tsx`, `src/main.tsx`)
 - TypeScript environment definitions (`src/vite-env.d.ts`)
+
+**Exported API:**
+
+- Components: `AuthProvider`, `AuthCallback`
+- Hook: `useAuth()` → `{ isAuthenticated, isLoading, user, error, signIn, signOut, getAccessToken, refreshAccessToken }`
+- Types: `AuthConfig`, `AuthUser`, `AuthState`, `AuthError`, `AuthErrorCode`, `AuthContextValue`, `SignInOptions`
 
 **Stack additions:**
 

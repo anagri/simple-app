@@ -1,7 +1,6 @@
 export const DEFAULT_SCOPES = ['openid', 'profile', 'email'];
 export const DEFAULT_CALLBACK_PATH = '/callback';
 export const DEFAULT_POST_LOGIN_REDIRECT = '/';
-export const DEFAULT_POST_LOGOUT_REDIRECT = '/';
 
 // Storage keys (will be prefixed with basePath)
 export const STORAGE_KEYS = {

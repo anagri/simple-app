@@ -7,7 +7,6 @@ export const authConfig: AuthConfig = {
   basePath: import.meta.env.VITE_BASE_PATH ?? '/simple-app',
   scopes: ['openid', 'profile', 'email'],
   postLoginRedirect: '/',
-  postLogoutRedirect: '/',
 };
 
 // Validate config at startup

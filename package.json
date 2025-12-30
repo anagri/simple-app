@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test --headed",
+    "test:all": "npm run test && npm run test:e2e",
     "ci:test:e2e": "playwright test",
     "prepare": "husky"
   },

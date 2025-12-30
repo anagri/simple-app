@@ -36,12 +36,12 @@ function generateRandomString(length: number): string {
 }
 
 // Generate PKCE code verifier (RFC 7636)
-export function generateCodeVerifier(): string {
+function generateCodeVerifier(): string {
   return generateRandomString(PKCE_VERIFIER_LENGTH);
 }
 
 // Generate PKCE code challenge (SHA-256, base64url encoded)
-export async function generateCodeChallenge(verifier: string): Promise<string> {
+async function generateCodeChallenge(verifier: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(verifier);
   const digest = await crypto.subtle.digest('SHA-256', data);
@@ -59,12 +59,12 @@ function base64UrlEncode(buffer: ArrayBuffer): string {
 }
 
 // Generate state parameter for CSRF protection
-export function generateState(): string {
+function generateState(): string {
   return generateRandomString(PKCE_STATE_LENGTH);
 }
 
 // Generate nonce for ID token validation
-export function generateNonce(): string {
+function generateNonce(): string {
   return generateRandomString(PKCE_NONCE_LENGTH);
 }
 
@@ -194,21 +194,6 @@ export function parseIdToken(idToken: string): AuthUser {
     given_name: payload.given_name,
     family_name: payload.family_name,
   };
-}
-
-// Build logout URL
-export function buildLogoutUrl(
-  endpoints: OAuthEndpoints,
-  idToken: string | undefined,
-  postLogoutRedirectUri: string
-): string {
-  const params = new URLSearchParams({
-    post_logout_redirect_uri: postLogoutRedirectUri,
-  });
-  if (idToken) {
-    params.set('id_token_hint', idToken);
-  }
-  return `${endpoints.logout}?${params.toString()}`;
 }
 
 // Revoke token (if supported)

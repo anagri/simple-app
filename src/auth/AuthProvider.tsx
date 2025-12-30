@@ -1,5 +1,13 @@
-import { useState, useCallback, useEffect, useMemo, type ReactNode } from 'react';
-import { AuthContext } from './AuthContext';
+/* eslint-disable react-refresh/only-export-components */
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useContext,
+  createContext,
+  type ReactNode,
+} from 'react';
 import { AuthStorage } from './storage';
 import {
   buildEndpoints,
@@ -11,7 +19,26 @@ import {
   revokeToken,
 } from './oauth';
 import { DEFAULT_CALLBACK_PATH, TOKEN_REFRESH_BUFFER_MS } from './constants';
-import type { AuthConfig, AuthState, SignInOptions, OAuthEndpoints, TokenResponse } from './types';
+import type {
+  AuthConfig,
+  AuthState,
+  AuthContextValue,
+  SignInOptions,
+  OAuthEndpoints,
+  TokenResponse,
+} from './types';
+
+// Create context
+export const AuthContext = createContext<AuthContextValue | null>(null);
+
+// Hook to access auth context
+export function useAuth(): AuthContextValue {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
 
 interface AuthProviderProps {
   config: AuthConfig;

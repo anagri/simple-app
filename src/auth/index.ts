@@ -1,10 +1,6 @@
 // Components
-export { AuthProvider } from './AuthProvider';
+export { AuthProvider, useAuth } from './AuthProvider';
 export { AuthCallback } from './AuthCallback';
-export { ProtectedRoute } from './ProtectedRoute';
-
-// Hooks
-export { useAuth } from './useAuth';
 
 // Types
 export type {
@@ -15,5 +11,4 @@ export type {
   AuthErrorCode,
   AuthContextValue,
   SignInOptions,
-  SignOutOptions,
 } from './types';

@@ -121,12 +121,22 @@ This file is gitignored. Use `e2e/.env.test.example` as template.
 
 ### Implementation Details
 
-- Custom auth library in `src/auth/` with PKCE flow
-- Context provider pattern (`AuthProvider`, `useAuth` hook)
+- Custom auth library in `src/auth/` (7 files) with PKCE flow
+  - **Provider module**: `AuthProvider.tsx` (context, hook, provider component)
+  - **Callback module**: `AuthCallback.tsx` (OAuth callback handler)
+  - **Core modules**: `oauth.ts` (PKCE flow, token exchange), `storage.ts` (localStorage), `types.ts`, `constants.ts`, `index.ts`
+- Context provider pattern with `useAuth` hook for auth state/actions
 - OAuth callback handler with React StrictMode safety (prevents duplicate token exchanges)
 - Namespaced localStorage for token management
-- Token auto-refresh with configurable buffer
+- Token auto-refresh with configurable buffer (60s before expiry)
+- Token revocation via API (no Keycloak logout redirect)
 - Page Object Model for E2E testing (`e2e/pages/auth-section.ts`)
+
+**Exported API:**
+
+- Components: `AuthProvider`, `AuthCallback`
+- Hook: `useAuth()` returns `{ isAuthenticated, isLoading, user, error, signIn, signOut, getAccessToken, refreshAccessToken }`
+- Types: `AuthConfig`, `AuthUser`, `AuthState`, `AuthError`, `AuthErrorCode`, `AuthContextValue`, `SignInOptions`
 
 ## GitHub Pages SPA Routing
 
