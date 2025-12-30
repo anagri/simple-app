@@ -1,102 +1,197 @@
 # Changelog
 
-## Initial Setup - 2025-12-30
+All notable changes to this project will be documented in this file.
 
-### Bootstrap React + Vite + TailwindCSS + TypeScript App
+## [Unreleased]
 
-**Commands executed:**
+### Added
 
-```bash
-# Create Vite React TypeScript app in current directory
-npm create vite@latest . -- --template react-ts
+- Updated GitHub Actions to latest versions:
+  - `actions/checkout@v6` (Node.js 24 support)
+  - `actions/setup-node@v6` (automatic npm caching)
+  - `actions/upload-pages-artifact@v4`
+- Updated `@types/node` to v25.0.3
 
-# Install dependencies
-npm install
+## 2025-12-30
 
-# Install Tailwind CSS v4
-npm install -D tailwindcss @tailwindcss/vite
-```
+### Added - OAuth 2.1 Authentication
 
-**Manual configuration:**
+**Commit:** Add OAuth 2.1 authentication with Keycloak (27d9952)
 
-1. Updated `vite.config.ts` - added TailwindCSS plugin:
+Implemented custom OAuth 2.1 authentication library with PKCE flow for Keycloak public client:
 
-```typescript
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
+- Custom auth library in `src/auth/` (10 files)
+  - Context provider pattern (`AuthProvider`, `useAuth` hook)
+  - OAuth callback handler with React StrictMode safety
+  - Namespaced localStorage for token management
+  - Token auto-refresh with configurable buffer
+- Configuration via environment variables (`.env.example`, `src/config.ts`)
+- Integration with React app (`src/App.tsx`, `src/main.tsx`)
+- TypeScript environment definitions (`src/vite-env.d.ts`)
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-});
-```
+**Stack additions:**
 
-2. Updated `src/index.css` - replaced content with Tailwind import:
+- Custom OAuth 2.1 + PKCE implementation
 
-```css
-@import 'tailwindcss';
-```
+### Added - E2E and Unit Tests for OAuth
 
-**Final stack:**
+**Commit:** Add E2E and unit tests for OAuth authentication (112b722)
 
-- React 19.2.0
-- Vite 7.2.4
-- TailwindCSS 4.1.18
-- TypeScript 5.9.3
+Comprehensive testing for OAuth authentication flow:
 
-**Run dev server:**
+- **E2E Tests:**
+  - Page Object Model implementation (`e2e/pages/auth-section.ts`)
+  - Test credentials management (`e2e/test-credentials.ts`, `e2e/.env.test.example`)
+  - Complete OAuth flow test with real Keycloak server (`e2e/login.spec.ts`)
+  - Playwright config with dotenv integration (`playwright.config.ts`)
+- **Unit Tests:**
+  - Enhanced App component tests with OAuth redirect testing (`src/App.test.tsx`)
+  - Test utilities for auth mocking (`src/test/auth-utils.tsx`)
 
-```bash
-npm run dev
-```
+**Stack additions:**
 
-## GitHub Pages Deployment - 2025-12-30
+- dotenv 17.2.3 (for E2E test credentials)
 
-### Added GitHub Actions Workflow for Automated Deployment
+### Changed - CI/CD Workflows
 
-**Files created:**
+**Commit:** Update CI/CD workflows for auth environment variables (797d567)
 
-1. `.github/workflows/deploy.yml` - GitHub Actions workflow for deploying to GitHub Pages
-   - Triggers on push to main branch
-   - Builds the app using `npm ci` and `npm run build`
-   - Deploys to GitHub Pages using official actions
+Added authentication support to CI/CD:
 
-**Configuration changes:**
+- Added auth environment variables to build step (`VITE_AUTH_URL`, `VITE_CLIENT_ID`, etc.)
+- Added test credentials to E2E test step (`TEST_USER_EMAIL`, `TEST_USER_PASSWORD`)
+- Enabled workflows on all branches (removed branch restrictions)
 
-1. Updated `vite.config.ts` - added base path for GitHub Pages:
+**Commit:** Merge build and deploy workflows with fixes (c2261af)
 
-```typescript
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  base: '/simple-app/',
-});
-```
+Unified build and deployment into single workflow:
 
-**Setup required in GitHub repo:**
+- Merged `deploy.yml` into `build.yml` for streamlined pipeline
+- Deploy job runs only on main branch after successful build
+- Fixed test script name (`test:run` → `test`)
+- Added permissions and concurrency configuration for GitHub Pages
+- Complete pipeline: audit → format → lint → test → build → e2e → deploy
 
-- Go to Settings → Pages
-- Under "Build and deployment", select "GitHub Actions" as the source
-- Ensure "Read and write permissions" are enabled in Settings → Actions → General
+### Added - GitHub Pages SPA Routing
 
-**Deployment:**
+**Commit:** Add GitHub Pages SPA routing fix (98cd18c)
 
-- Automatic on every push to main branch
-- App will be available at: https://bodhisearch.github.io/simple-app/
+Implemented 404 redirect hack for client-side routing on GitHub Pages:
 
-## ESLint + Prettier Integration - 2025-12-30
+- `public/404.html` - Redirect script converts 404 paths to query strings
+- `index.html` - Restoration script decodes path before app loads
+- Enables OAuth callback route (`/callback`) to work without server-side routing
+- Based on [rafgraph/spa-github-pages](https://github.com/rafgraph/spa-github-pages)
 
-### Added Prettier and ESLint Integration for Code Quality
+**Example:** `/simple-app/callback` → 404 → `/?/callback` → `/callback` (restored)
 
-**Commands executed:**
+### Added - Login Screen UI
 
-```bash
-# Install Prettier and ESLint-Prettier integration
-npm install -D prettier eslint-config-prettier eslint-plugin-prettier
-```
+**Commit:** Replace placeholder page with Login screen (ef64b7e)
 
-**Files created:**
+Replaced Vite default page with OAuth login interface:
 
-1. `.prettierrc` - Prettier configuration:
+- Clean login screen with welcome message
+- Login button with `data-testid` for testing
+- Authenticated state display with user info and logout button
+- Responsive layout using Tailwind CSS
+
+### Added - Quality & Reliability Features
+
+**Commit:** Add quality and reliability features (e7a0e3d)
+
+Comprehensive quality tooling setup:
+
+1. **Unit Testing with Vitest:**
+   - Vitest configuration in `vite.config.ts` (jsdom environment, coverage)
+   - Test setup file (`src/test/setup.ts`)
+   - App component tests (`src/App.test.tsx`)
+   - Scripts: `test`, `test:coverage`
+
+2. **Pre-commit Hooks:**
+   - Husky + lint-staged integration
+   - Automatic formatting with Prettier
+   - ESLint fixes on TypeScript files
+   - Type checking with `tsc --noEmit`
+   - Configuration: `.husky/pre-commit`, `.lintstagedrc.json`
+
+3. **Dependency Management:**
+   - Dependabot configuration (`.github/dependabot.yml`)
+   - Weekly npm dependency updates (Mondays)
+   - Weekly GitHub Actions updates
+   - Auto-prefixed commit messages (`chore(deps):`, `chore(ci):`)
+
+4. **Security Scanning:**
+   - Added `npm audit --audit-level=high` to CI pipeline
+
+**Stack additions:**
+
+- vitest 4.0.16
+- @testing-library/react 16.3.1
+- @testing-library/jest-dom 6.9.1
+- @testing-library/user-event 14.6.1
+- jsdom 27.4.0
+- husky 9.1.7
+- lint-staged 16.2.7
+
+### Added - Playwright E2E Testing
+
+**Commit:** Add Playwright e2e testing (76e1725)
+
+End-to-end testing setup:
+
+- Playwright configuration (`playwright.config.ts`)
+  - Test directory: `./e2e`
+  - Base URL: `http://localhost:5173/simple-app/`
+  - Chromium browser only
+  - Web server auto-start
+- Example counter test (`e2e/counter.spec.ts`)
+- Added `data-testid` attributes to App component
+- CI integration in `build.yml` workflow
+- Scripts: `test:e2e` (headed), `ci:test:e2e` (headless)
+
+**Stack additions:**
+
+- @playwright/test 1.57.0
+
+### Added - Repository Guidance
+
+**Commit:** Add CLAUDE.md for repository guidance (9e4cb1e)
+
+Created `CLAUDE.md` documentation for Claude Code:
+
+- Technology stack overview
+- Development commands
+- Project configuration details
+- Testing guidelines
+- CI/CD workflow information
+- GitHub Pages setup instructions
+- Development workflow best practices
+
+### Added - CI/CD Build Workflow
+
+**Commit:** Add CI/CD build workflow (8dd164f)
+
+Created GitHub Actions workflow for continuous integration:
+
+- Workflow file: `.github/workflows/build.yml`
+- Runs on: push to main, pull requests
+- Pipeline: checkout → setup → install → format check → lint → build
+- Ensures code quality before deployment
+
+### Added - Code Quality Tools
+
+**Commit:** Add ESLint + Prettier integration and format codebase (7415cad)
+
+Integrated Prettier with ESLint for consistent code style:
+
+- Prettier configuration (`.prettierrc`, `.prettierignore`)
+- ESLint + Prettier integration (`eslint-config-prettier`, `eslint-plugin-prettier`)
+- Updated `eslint.config.js` with Prettier plugin
+- Added `lint:fix` script for formatting and auto-fixing
+- Formatted entire codebase
+
+**Configuration:**
 
 ```json
 {
@@ -108,168 +203,69 @@ npm install -D prettier eslint-config-prettier eslint-plugin-prettier
 }
 ```
 
-2. `.prettierignore` - Files/directories to ignore during formatting
-
-**Configuration changes:**
-
-1. Updated `eslint.config.js` - added Prettier plugin and config
-2. Updated `package.json` - added `lint:fix` script that formats and fixes linting issues
-
-**Usage:**
-
-```bash
-npm run lint        # Check for linting issues
-npm run lint:fix    # Format with Prettier and auto-fix linting issues
-```
-
 **Stack additions:**
 
-- Prettier 3.7.4
+- prettier 3.7.4
 - eslint-config-prettier 10.1.8
 - eslint-plugin-prettier 5.5.4
 
-## CI/CD Build Workflow - 2025-12-30
+### Added - GitHub Pages Deployment
 
-### Added GitHub Actions Build and Lint Workflow
+**Commit:** Add GitHub Pages deployment workflow (944cecc)
 
-**Files created:**
+Automated deployment to GitHub Pages:
 
-1. `.github/workflows/build.yml` - CI workflow for code quality checks
-   - Runs on push to main and pull requests
-   - Checks code formatting with Prettier
-   - Runs ESLint for code quality
-   - Builds the project to ensure no build errors
+- Workflow file: `.github/workflows/deploy.yml`
+- Triggers on push to main branch
+- Pipeline: checkout → setup → install → build → deploy
+- Updated `vite.config.ts` with `base: '/simple-app/'`
+- Deployed at: https://bodhisearch.github.io/simple-app/
 
-**Workflow steps:**
+**Required repo settings:**
 
-1. Checkout code
-2. Setup Node.js 20
-3. Install dependencies with `npm ci`
-4. Check formatting: `npx prettier --check .`
-5. Lint code: `npm run lint`
-6. Build project: `npm run build`
+- Settings → Pages → Source: "GitHub Actions"
+- Settings → Actions → General → "Read and write permissions"
 
-## Playwright E2E Testing - 2025-12-30
+### Added - Documentation
 
-### Added Playwright for End-to-End Testing
+**Commit:** Add CHANGELOG.md documenting setup steps (6f34aa2)
 
-**Commands executed:**
+Initial changelog documenting:
 
-```bash
-# Install Playwright
-npm install -D @playwright/test
+- Bootstrap setup steps
+- GitHub Pages configuration
+- ESLint + Prettier integration
+- CI/CD workflows
 
-# Install Chromium browser
-npx playwright install chromium
-```
+### Added - TailwindCSS Configuration
 
-**Files created:**
+**Commit:** configured tailwindcss (107b9d6)
 
-1. `playwright.config.ts` - Playwright configuration:
-   - Test directory: `./e2e`
-   - Base URL: `http://localhost:5173/simple-app/`
-   - Web server configured to run dev server
-   - Chromium browser only
+TailwindCSS v4 setup:
 
-2. `e2e/counter.spec.ts` - Counter test:
-   - Navigates to app
-   - Asserts counter button shows "count is 0"
-
-**Configuration changes:**
-
-1. Updated `src/App.tsx` - added `data-testid="counter-button"` to counter button
-2. Updated `package.json` - added test scripts:
-   - `test:e2e` - Run tests in headed mode (browser visible)
-   - `ci:test:e2e` - Run tests in headless mode for CI
-3. Updated `.github/workflows/build.yml` - added Playwright browser install and e2e test steps
-
-**Usage:**
-
-```bash
-npm run test:e2e       # Run e2e tests in headed mode (browser visible)
-npm run ci:test:e2e    # Run e2e tests in headless mode (for CI)
-```
+- Updated `vite.config.ts` with TailwindCSS Vite plugin
+- Updated `src/index.css` with `@import 'tailwindcss';`
+- No PostCSS config required (Vite plugin handles it)
 
 **Stack additions:**
 
-- @playwright/test 1.57.0
+- @tailwindcss/vite 4.1.18
+- tailwindcss 4.1.18
 
-## Quality & Reliability Features - 2025-12-30
+### Added - Initial Project Setup
 
-### Added Comprehensive Quality Tooling
+**Commit:** npm create vite@latest . -- --template react-ts (71acb51)
 
-**1. Unit Testing with Vitest**
+Bootstrapped React + TypeScript project using Vite:
 
-Commands executed:
+- React 19.2.0
+- Vite 7.2.4
+- TypeScript 5.9.3
+- ESLint 9.39.1
 
-```bash
-npm install -D vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
-```
-
-Files created:
-
-- `vite.config.ts` - Added Vitest configuration (jsdom environment, coverage, setupFiles)
-- `src/test/setup.ts` - Test setup with jest-dom matchers
-- `src/App.test.tsx` - Unit tests for App component
-
-Scripts added:
-
-- `test` - Run tests in watch mode
-- `test:run` - Run tests once
-- `test:coverage` - Run tests with coverage report
-
-**2. Pre-commit Hooks with Husky + lint-staged**
-
-Commands executed:
+**Commands:**
 
 ```bash
-npm install -D husky lint-staged
-npx husky init
+npm create vite@latest . -- --template react-ts
+npm install
 ```
-
-Files created:
-
-- `.husky/pre-commit` - Pre-commit hook that runs lint-staged
-- `.lintstagedrc.json` - Lint-staged configuration:
-  - Runs Prettier on all staged files
-  - Runs ESLint fix on TypeScript files
-  - Runs type checking with tsc
-
-**3. Dependency Management with Dependabot**
-
-Files created:
-
-- `.github/dependabot.yml` - Automated dependency updates:
-  - Weekly npm dependency updates (Mondays)
-  - Weekly GitHub Actions updates
-  - Auto-prefixed commit messages
-
-**4. Security Scanning in CI**
-
-Configuration changes:
-
-- Updated `.github/workflows/build.yml`:
-  - Added `npm audit --audit-level=high` after install
-  - Added unit test step after lint
-  - Pipeline now: install → audit → format → lint → unit test → build → e2e test
-
-**Usage:**
-
-```bash
-# Unit tests
-npm test              # Run tests in watch mode
-npm run test:run      # Run tests once
-npm run test:coverage # Run with coverage
-
-# Pre-commit hooks run automatically on git commit
-```
-
-**Stack additions:**
-
-- vitest 4.0.16
-- @testing-library/react 16.3.1
-- @testing-library/jest-dom 6.9.1
-- @testing-library/user-event 14.6.1
-- jsdom 27.4.0
-- husky 9.1.7
-- lint-staged 16.2.7

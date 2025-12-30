@@ -16,8 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev              # Start dev server at http://localhost:5173
 
 # Testing
-npm test                 # Run unit tests in watch mode
-npm run test:run         # Run unit tests once
+npm test                 # Run unit tests once
 npm run test:coverage    # Run unit tests with coverage report
 npm run test:e2e         # Run e2e tests (headed mode, browser visible)
 npm run ci:test:e2e      # Run e2e tests (headless, for CI)
@@ -94,12 +93,56 @@ Configured via Husky + lint-staged (`.husky/pre-commit` and `.lintstagedrc.json`
 - Consistent color scheme using Tailwind's color palette
 - Proper focus states and keyboard navigation support
 
+## Authentication
+
+This app uses **OAuth 2.1 with PKCE** for authentication via Keycloak public client.
+
+### Configuration
+
+Authentication is configured via environment variables in `.env`:
+
+```bash
+VITE_AUTH_URL=https://main-id.getbodhi.app/realms/bodhi
+VITE_CLIENT_ID=your-client-id
+VITE_APP_URL=http://localhost:5173  # Optional, defaults to window.location.origin
+VITE_BASE_PATH=/simple-app
+```
+
+### E2E Test Credentials
+
+E2E tests require test user credentials in `e2e/.env.test`:
+
+```bash
+TEST_USER_EMAIL=user@email.com
+TEST_USER_PASSWORD=your-password
+```
+
+This file is gitignored. Use `e2e/.env.test.example` as template.
+
+### Implementation Details
+
+- Custom auth library in `src/auth/` with PKCE flow
+- Context provider pattern (`AuthProvider`, `useAuth` hook)
+- OAuth callback handler with React StrictMode safety (prevents duplicate token exchanges)
+- Namespaced localStorage for token management
+- Token auto-refresh with configurable buffer
+- Page Object Model for E2E testing (`e2e/pages/auth-section.ts`)
+
+## GitHub Pages SPA Routing
+
+Client-side routing handled via 404 redirect hack:
+
+- `public/404.html` - Redirects 404s by encoding path to query string
+- `index.html` - Restoration script decodes path before app loads
+- Enables OAuth callback route (`/callback`) to work on GitHub Pages
+- Based on [rafgraph/spa-github-pages](https://github.com/rafgraph/spa-github-pages)
+
 ## CI/CD
 
-Two GitHub Actions workflows:
+Single unified GitHub Actions workflow:
 
-- **build.yml** - Runs on push/PR: security audit, format check, lint, unit tests, build, e2e tests
-- **deploy.yml** - Deploys to GitHub Pages on push to main
+- **build.yml** - Runs on all pushes/PRs: security audit, format check, lint, unit tests, build, e2e tests
+- **deploy** - GitHub Pages deployment runs only on main branch after successful build
 
 ### Dependabot
 
