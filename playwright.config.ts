@@ -1,4 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as path from 'path';
+import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load e2e test environment variables
+dotenv.config({ path: path.resolve(__dirname, 'e2e/.env.test'), quiet: true });
 
 export default defineConfig({
   testDir: './e2e',

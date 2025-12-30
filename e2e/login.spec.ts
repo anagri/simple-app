@@ -1,20 +1,17 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
+import { AuthSection } from './pages/auth-section';
 
-test('login screen displays welcome message', async ({ page }) => {
-  await page.goto('/');
+test.describe('OAuth 2.1 Authentication Flow', () => {
+  test('complete login and logout flow with Keycloak', async ({ page }) => {
+    const authSection = new AuthSection(page);
 
-  await expect(page.getByText('Welcome')).toBeVisible();
-  await expect(page.getByText('Please sign in to continue')).toBeVisible();
-});
+    // Navigate to app
+    await page.goto('/');
 
-test('login button is present and clickable', async ({ page }) => {
-  await page.goto('/');
+    // Complete login flow
+    await authSection.loginWithKeycloak();
 
-  const loginButton = page.getByTestId('login-button');
-  await expect(loginButton).toBeVisible();
-  await expect(loginButton).toHaveText('Login');
-
-  await loginButton.click();
-  // Button should still be visible after click (no-op handler)
-  await expect(loginButton).toBeVisible();
+    // Complete logout flow
+    await authSection.logoutWithKeycloak();
+  });
 });
