@@ -4,19 +4,27 @@ import { describe, it, expect } from 'vitest';
 import App from './App';
 
 describe('App', () => {
-  it('renders counter with initial value 0', () => {
+  it('renders login screen with welcome message', () => {
     render(<App />);
-    const counterButton = screen.getByTestId('counter-button');
-    expect(counterButton).toHaveTextContent('count is 0');
+    expect(screen.getByText('Welcome')).toBeInTheDocument();
+    expect(screen.getByText('Please sign in to continue')).toBeInTheDocument();
   });
 
-  it('increments counter on click', async () => {
+  it('renders login button', () => {
+    render(<App />);
+    const loginButton = screen.getByTestId('login-button');
+    expect(loginButton).toBeInTheDocument();
+    expect(loginButton).toHaveTextContent('Login');
+  });
+
+  it('login button is clickable', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const counterButton = screen.getByTestId('counter-button');
-    await user.click(counterButton);
+    const loginButton = screen.getByTestId('login-button');
+    await user.click(loginButton);
 
-    expect(counterButton).toHaveTextContent('count is 1');
+    // Button should still be present (no-op handler)
+    expect(loginButton).toBeInTheDocument();
   });
 });

@@ -74,6 +74,26 @@ Pre-commit hooks automatically run on `git commit`:
 
 Configured via Husky + lint-staged (`.husky/pre-commit` and `.lintstagedrc.json`)
 
+## UI Development Guidelines
+
+### General Requirements
+
+- **Responsive Design**: Adaptive desktop/mobile layouts using Tailwind CSS breakpoints (sm, md, lg, xl)
+- **Mobile Support**: Not necessarily fully functional on mobile, but must support proper layout at different viewport widths/heights
+- **Clean UI**: Follow modern UI/UX best practices with proper spacing, typography, and visual hierarchy
+- **Testing Attributes**: All interactive elements must have `data-testid` attributes for automated testing
+  - Use `data-testid` for primary element identification (e.g., `data-testid="login-button"`)
+  - Use additional `data-test-*` attributes for state or context when needed
+  - Enables testing with both Playwright (e2e) and React Testing Library (unit)
+- **Accessibility**: Use semantic HTML and ARIA attributes where appropriate
+
+### Styling Conventions
+
+- Use TailwindCSS utility classes for all styling
+- Follow mobile-first responsive design (base styles for mobile, breakpoints for larger screens)
+- Consistent color scheme using Tailwind's color palette
+- Proper focus states and keyboard navigation support
+
 ## CI/CD
 
 Two GitHub Actions workflows:
